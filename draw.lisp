@@ -44,6 +44,7 @@
         for p1 = (pop edges)
         do (draw-line (first p0) (second p0) (first p1) (second p1) screen color)))
 
+;;;curves
 (defun add-parametric (edges step x-function y-function &optional (z 0))
   "Given X-FUNCTION and Y-FUNCTION, which take one input and outputs the x and y
    coordinates respectively, add a parametric where s runs from 0 to 1 at STEP interval
@@ -103,6 +104,7 @@
                                    (- (* 3 (+ x0 x2)) (* 6 x1))
                                    (+ (* 3 (- x1 x2)) (- x3 x0)))))
 
+;;;3d shapes
 (defun add-box (edges x y z width height depth)
   "Adds a box to EDGES where the front left upper point is (x y z).
    WIDTH is x, HEIGHT y, and DEPTH z."
@@ -124,13 +126,13 @@
 (defun generate-sphere (step x y z r)
   "Generates a sphere with center (x y z), radius R, points drawn STEP times."
   (let (points)
-    (loop for phi below step
-          for s = (* 2 pi (/ phi step))
-          do (loop for theta below step
-                   for v = (* pi (/ theta step))
-                   do (push (list (+ x (* r (cos s)))
-                                  (+ y (* r (sin s) (cos v)))
-                                  (+ z (* r (sin s) (sin v)))
+    (loop for long below step
+          for phi = (* 2 pi (/ long step))
+          do (loop for lat below step
+                   for theta = (* pi (/ lat step))
+                   do (push (list (+ x (* r (cos phi)))
+                                  (+ y (* r (sin phi) (cos theta)))
+                                  (+ z (* r (sin phi) (sin theta)))
                                   1)
                             points)))
     points))
@@ -147,13 +149,13 @@
   "Generates a torus with center (x y z), cross-section circle radius R1,
    rotated around with radius R2. Points drawn STEP times."
   (let (points)
-    (loop for phi below step
-          for s = (* 2 pi (/ phi step))
-          do (loop for theta below step
-                   for v = (* 2 pi (/ theta step))
-                   do (push (list (+ x (* (cos s) (+ r2 (* r1 (cos v)))))
-                                  (- y (* r1 (sin v)))
-                                  (- z (* (sin s) (+ r2 (* r1 (cos v)))))
+    (loop for rot below step
+          for phi = (* 2 pi (/ rot step))
+          do (loop for circle below step
+                   for theta = (* 2 pi (/ circle step))
+                   do (push (list (+ x (* (cos phi) (+ r2 (* r1 (cos theta)))))
+                                  (- y (* r1 (sin theta)))
+                                  (- z (* (sin phi) (+ r2 (* r1 (cos theta)))))
                                   1)
                             points)))
     points))
