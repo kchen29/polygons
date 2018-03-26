@@ -103,28 +103,23 @@
                                    (- (* 3 (+ x0 x2)) (* 6 x1))
                                    (+ (* 3 (- x1 x2)) (- x3 x0)))))
 
-(defun add-square (edges x y z width height)
-  "Adds a square to EDGES where the front left point ix (x y z).
-   Draws it parallel to the xy plane."
-  (let ((right (+ x width))
-        (down (- y height)))
-    (add-edge edges x y z right y z)
-    (add-edge edges x y z x down z)
-    (add-edge edges right y z right down z)
-    (add-edge edges x down z right down z)))
-
 (defun add-box (edges x y z width height depth)
   "Adds a box to EDGES where the front left upper point is (x y z).
    WIDTH is x, HEIGHT y, and DEPTH z."
   (let ((right (+ x width))
         (down (- y height))
         (back (- z depth)))
-    (add-square edges x y z width height)
-    (add-square edges x y back width height)
-    (add-edge edges x y z x y back)
-    (add-edge edges right y z right y back)
-    (add-edge edges x down z x down back)
-    (add-edge edges right down z right down back)))
+    (flet ((add-square (z)
+             (add-edge edges x y z right y z)
+             (add-edge edges x y z x down z)
+             (add-edge edges right y z right down z)
+             (add-edge edges x down z right down z)))
+      (add-square z)
+      (add-square back)
+      (add-edge edges x y z x y back)
+      (add-edge edges right y z right y back)
+      (add-edge edges x down z x down back)
+      (add-edge edges right down z right down back))))
 
 (defun generate-sphere (step x y z r)
   "Generates a sphere with center (x y z), radius R, points drawn STEP times."
