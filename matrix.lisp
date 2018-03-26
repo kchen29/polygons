@@ -20,23 +20,14 @@
 
 (defun matrix-multiply (m1 m2)
   "A specific matrix multiplication routine. M1 is square.
-   Multiplies M1 with M2. Modifies M2 to hold the result.
-   M2 can be a list (optimization for edges to be a 2D list)."
+   Multiplies M1 with M2. Modifies M2 to hold the result."
   (let* ((dimension (array-dimension m1 0))
          (temp (make-array dimension)))
-    (if (listp m2)
-        (dolist (point m2)
-          (loop for val in point
-                for i = 0 then (1+ i)
-                do (setf (svref temp i) val))
-          (loop for con on point
-                for row = 0 then (1+ row)
-                do (setf (car con) (dot row m1 temp))))
-        (dotimes (col (array-dimension m2 1))
-          (dotimes (i dimension)
-            (setf (svref temp i) (aref m2 i col)))
-          (dotimes (row dimension)
-            (setf (aref m2 row col) (dot row m1 temp)))))))
+    (dotimes (col (array-dimension m2 1))
+      (dotimes (i dimension)
+        (setf (svref temp i) (aref m2 i col)))
+      (dotimes (row dimension)
+        (setf (aref m2 row col) (dot row m1 temp))))))
 
 (defun dot (row m1 temp)
   "Dots the ROW of M1 with TEMP.

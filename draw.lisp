@@ -38,11 +38,14 @@
             (draw-line-base x0 y0 x1 (- y0 ydif) x (- (* 2 y0) y))))))
 
 (defun draw-lines (edges screen color)
-  "Draws the lines from EDGES onto SCREEN with COLOR."
-  (loop while (car edges)
-        for p0 = (pop edges)
-        for p1 = (pop edges)
-        do (draw-line (first p0) (second p0) (first p1) (second p1) screen color)))
+  "Draws the lines from EDGES to SCREEN with COLOR."
+  (do ((index 0 (+ 2 index)))
+      ((>= index (array-dimension edges 1)))
+    (draw-line (aref edges 0 index)
+               (aref edges 1 index)
+               (aref edges 0 (1+ index))
+               (aref edges 1 (1+ index))
+               screen color)))
 
 ;;;curves
 (defun add-parametric (edges step x-function y-function &optional (z 0))
