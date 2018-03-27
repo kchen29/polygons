@@ -4,7 +4,7 @@
                    (:constructor m-matrix))
   rows
   cols
-  (last-col 0)
+  (last-col 1)
   array)
 
 (defmacro mref (matrix x y)
@@ -19,7 +19,7 @@
 (defun clear-matrix (matrix)
   "Clears MATRIX."
   (adjust-matrix matrix 4 4)
-  (setf (m-last-col matrix) 0))
+  (setf (m-last-col matrix) 1))
 
 (defun adjust-matrix (matrix rows cols)
   "Adjusts MATRIX to ROWS and COLS.
@@ -67,7 +67,7 @@
 ;;;transformations
 (defun make-transform-matrix ()
   (let ((transform (make-matrix)))
-    (setf (m-last-col transform) 3)
+    (setf (m-last-col transform) 4)
     transform))
 
 (defmacro deftransform (transform-name args &body body)
