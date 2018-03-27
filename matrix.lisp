@@ -1,49 +1,75 @@
 ;;;; Matrices. Also includes transformations.
 
+(defstruct (matrix (:conc-name m-)
+                   (:constructor m-matrix))
+  rows
+  cols
+  (last-col 0)
+  array)
+
+(defmacro mref (matrix x y)
+  "Accesses array of MATRIX at X and Y."
+  `(aref (m-array ,matrix) ,x ,y))
+
+(defun make-matrix (&optional (rows 4) (cols 4))
+  "Makes a matrix with ROWS and COLS."
+  (m-matrix :rows rows :cols cols
+            :array (make-array (list rows cols) :adjustable t)))
+
+(defun clear-matrix (matrix)
+  "Clears MATRIX."
+  (adjust-matrix matrix 4 4)
+  (setf (m-last-col matrix) 0))
+
+(defun adjust-matrix (matrix rows cols)
+  "Adjusts MATRIX to ROWS and COLS.
+   Keeps last-col."
+  (adjust-array (m-array matrix) (list rows cols))
+  (setf (m-rows matrix) rows)
+  (setf (m-cols matrix) cols))
+
+
 (defun print-matrix (matrix)
   "Prints out MATRIX to *standard-output*."
   (format t "~{~%~{~a~4,4T~}~}~%" (matrix-to-list matrix)))
 
 (defun matrix-to-list (matrix)
   "Turns MATRIX into a list."
-  (loop for x below (array-dimension matrix 0)
-        collect (loop for y below (array-dimension matrix 1)
-                      collect (aref matrix x y))))
+  (loop for x below (m-rows matrix)
+        collect (loop for y below (m-last-col matrix)
+                      collect (mref matrix x y))))
 
 (defun to-identity (matrix)
   "Turns MATRIX into an identity matrix."
-  (dotimes (x (array-dimension matrix 0))
-    (dotimes (y (array-dimension matrix 1))
+  (dotimes (x (m-rows matrix))
+    (dotimes (y (m-last-col matrix))
       (if (= x y)
-          (setf (aref matrix x y) 1)
-          (setf (aref matrix x y) 0)))))
+          (setf (mref matrix x y) 1)
+          (setf (mref matrix x y) 0)))))
 
 (defun matrix-multiply (m1 m2)
   "A specific matrix multiplication routine. M1 is square.
    Multiplies M1 with M2. Modifies M2 to hold the result."
-  (let* ((dimension (array-dimension m1 0))
+  (let* ((dimension (m-rows m1))
          (temp (make-array dimension)))
-    (dotimes (col (array-dimension m2 1))
+    (dotimes (col (m-last-col m2))
       (dotimes (i dimension)
-        (setf (svref temp i) (aref m2 i col)))
+        (setf (svref temp i) (mref m2 i col)))
       (dotimes (row dimension)
-        (setf (aref m2 row col) (dot row m1 temp))))))
+        (setf (mref m2 row col) (dot row m1 temp))))))
 
 (defun dot (row m1 temp)
   "Dots the ROW of M1 with TEMP.
    They should have the same corresponding sizes."
-  (loop for i below (array-dimension m1 1)
-        sum (* (aref m1 row i) (svref temp i))))
-
-(defun make-matrix (&optional (rows 4) (cols 4))
-  "Makes a matrix with ROWS and COLS."
-  (make-array (list rows cols) :adjustable t))
-
-(defun clear-matrix (matrix)
-  "Adjusts size to zero."
-  (adjust-array matrix '(4 0)))
+  (loop for i below (m-cols m1)
+        sum (* (mref m1 row i) (svref temp i))))
 
 ;;;transformations
+(defun make-transform-matrix ()
+  (let ((transform (make-matrix)))
+    (setf (m-last-col transform) 3)
+    transform))
+
 (defmacro deftransform (transform-name args &body body)
   "Defuns make-transform given TRANSFORM-NAME, using args and the body.
    Requires docstring as part of body.
@@ -57,7 +83,7 @@
     `(progn
        (defun ,make-symbol ,args
          ,make-doc
-         (let ((transform (make-matrix)))
+         (let ((transform (make-transform-matrix)))
            (to-identity transform)
            ,@body
            transform))
@@ -67,15 +93,15 @@
 
 (deftransform translate (delx dely delz)
   "translates by DELX, DELY, and DELZ."
-  (setf (aref transform 0 3) delx
-        (aref transform 1 3) dely
-        (aref transform 2 3) delz))
+  (setf (mref transform 0 3) delx
+        (mref transform 1 3) dely
+        (mref transform 2 3) delz))
 
 (deftransform scale (x-scale y-scale z-scale)
   "scales x by X-SCALE, y by Y-SCALE, and z by Z-SCALE."
-  (setf (aref transform 0 0) x-scale
-        (aref transform 1 1) y-scale
-        (aref transform 2 2) z-scale))
+  (setf (mref transform 0 0) x-scale
+        (mref transform 1 1) y-scale
+        (mref transform 2 2) z-scale))
 
 (defmacro defrotation (rotate-axis axis-0 axis-1)
   "Defines a rotation around ROTATE-AXIS. AXIS-0 and AXIS-1 mark the value of the axes,
@@ -89,10 +115,10 @@
     `(deftransform ,rotate-symbol (degrees)
        ,rotate-docstring
        (let ((radians (/ (* degrees pi) 180)))
-         (setf (aref transform ,axis-0 ,axis-0) (cos radians)
-               (aref transform ,axis-0 ,axis-1) (- 0 (sin radians))
-               (aref transform ,axis-1 ,axis-0) (sin radians)
-               (aref transform ,axis-1 ,axis-1) (cos radians))))))
+         (setf (mref transform ,axis-0 ,axis-0) (cos radians)
+               (mref transform ,axis-0 ,axis-1) (- 0 (sin radians))
+               (mref transform ,axis-1 ,axis-0) (sin radians)
+               (mref transform ,axis-1 ,axis-1) (cos radians))))))
 
 (defrotation z 0 1)
 (defrotation x 1 2)

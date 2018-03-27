@@ -40,11 +40,11 @@
 (defun draw-lines (edges screen color)
   "Draws the lines from EDGES to SCREEN with COLOR."
   (do ((index 0 (+ 2 index)))
-      ((>= index (array-dimension edges 1)))
-    (draw-line (aref edges 0 index)
-               (aref edges 1 index)
-               (aref edges 0 (1+ index))
-               (aref edges 1 (1+ index))
+      ((>= index (m-last-col edges)))
+    (draw-line (mref edges 0 index)
+               (mref edges 1 index)
+               (mref edges 0 (1+ index))
+               (mref edges 1 (1+ index))
                screen color)))
 
 ;;;curves

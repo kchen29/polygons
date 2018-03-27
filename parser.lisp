@@ -58,6 +58,7 @@
   (with-open-file (stream filename)
     (do ((line (next-line stream) (next-line stream)))
         ((string= line "quit"))
+      (print-matrix transform)
       (if (valid-command line)
           (parse-line line stream edges transform dimensions screen)
           (format t "Unknown command: ~a~%" line)))))
@@ -70,7 +71,7 @@
     ("display" (draw-lines edges screen '(255 0 255))
                (display dimensions screen :wait t)
                (clear-screen screen))
-    ("clear" (clear-edges edges))
+    ("clear" (clear-matrix edges))
     (otherwise
      (let ((args (parse-args (next-line stream))))
        (switch line #'string=
