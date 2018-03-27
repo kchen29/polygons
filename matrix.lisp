@@ -4,7 +4,8 @@
                    (:constructor m-matrix))
   rows
   cols
-  (last-col 1)
+  ;;last-col is how many columns there are
+  (last-col 0)
   array)
 
 (defmacro mref (matrix x y)
@@ -19,7 +20,7 @@
 (defun clear-matrix (matrix)
   "Clears MATRIX."
   (adjust-matrix matrix 4 4)
-  (setf (m-last-col matrix) 1))
+  (setf (m-last-col matrix) 0))
 
 (defun adjust-matrix (matrix rows cols)
   "Adjusts MATRIX to ROWS and COLS.

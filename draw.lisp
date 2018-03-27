@@ -108,23 +108,42 @@
                                    (+ (* 3 (- x1 x2)) (- x3 x0)))))
 
 ;;;3d shapes
-(defun add-box (edges x y z width height depth)
+(defun draw-polygons (polygons screen color)
+  "Draws the polygons from POLYGONS to SCREEN with COLOR."
+  (flet ((draw-polygon (x0 y0 x1 y1 x2 y2)
+           (draw-line x0 y0 x1 y1 screen color)
+           (draw-line x0 y0 x2 y2 screen color)
+           (draw-line x1 y1 x2 y2 screen color)))
+    (do ((index 0 (+ 3 index)))
+        ((>= index (m-last-col polygons)))
+      (draw-polygon (mref polygons 0 index)
+                    (mref polygons 1 index)
+                    (mref polygons 0 (1+ index))
+                    (mref polygons 1 (1+ index))
+                    (mref polygons 0 (+ 2 index))
+                    (mref polygons 1 (+ 2 index))))))
+
+(defun add-box (polygons x y z width height depth)
   "Adds a box to EDGES where the front left upper point is (x y z).
    WIDTH is x, HEIGHT y, and DEPTH z."
-  (let ((right (+ x width))
-        (down (- y height))
-        (back (- z depth)))
-    (flet ((add-square (z)
-             (add-edge edges x y z right y z)
-             (add-edge edges x y z x down z)
-             (add-edge edges right y z right down z)
-             (add-edge edges x down z right down z)))
-      (add-square z)
-      (add-square back)
-      (add-edge edges x y z x y back)
-      (add-edge edges right y z right y back)
-      (add-edge edges x down z x down back)
-      (add-edge edges right down z right down back))))
+  (let ((r (+ x width))
+        (d (- y height))
+        (b (- z depth)))
+    (flet ((add-square (x0 y0 z0 x1 y1 z1 x2 y2 z2 x3 y3 z3)
+             (add-polygon polygons x0 y0 z0 x1 y1 z1 x2 y2 z2)
+             (add-polygon polygons x0 y0 z0 x2 y2 z2 x3 y3 z3)))
+      ;;front
+      (add-square x y z x d z r d z r y z)
+      ;;top
+      (add-square x y z r y z r y b x y b)
+      ;;left
+      (add-square x y z x y b x d b x d z)
+      ;;back
+      (add-square r d b x d b x y b r y b)
+      ;;bottom
+      (add-square r d b r d z x d z x d b)
+      ;;right
+      (add-square r d b r y b r y z r d z))))
 
 (defun generate-sphere (step x y z r)
   "Generates a sphere with center (x y z), radius R, points drawn STEP times."

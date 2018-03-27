@@ -68,7 +68,7 @@
   (switch line #'string=
     ("ident" (to-identity transform))
     ("apply" (matrix-multiply transform edges))
-    ("display" (draw-lines edges screen '(255 0 255))
+    ("display" (draw-polygons edges screen '(255 0 255))
                (display dimensions screen :wait t)
                (clear-screen screen))
     ("clear" (clear-matrix edges))
@@ -88,7 +88,7 @@
          ("move" (apply #'translate transform args))
          ("rotate" (apply #'rotate transform args))
          
-         ("save" (draw-lines edges screen '(255 0 255))
+         ("save" (draw-polygons edges screen '(255 0 255))
                  (apply #'save (string-downcase (symbol-name (first args)))
                         (list dimensions screen))
                  (clear-screen screen)))))))

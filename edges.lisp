@@ -12,7 +12,7 @@
 
 (defun add-point (edges x y z)
   "Adds a point (x y z) to EDGES at INDEX."
-  (let ((index (1- (m-last-col edges))))
+  (let ((index (m-last-col edges)))
     (when (= (m-last-col edges) (m-cols edges))
       (adjust-matrix edges 4 (setf (m-cols edges)
                                    (* 2 (m-cols edges)))))
@@ -21,3 +21,10 @@
           (mref edges 1 index) y
           (mref edges 2 index) z
           (mref edges 3 index) 1)))
+
+(defun add-polygon (polygons x0 y0 z0 x1 y1 z1 x2 y2 z2)
+  "Adds a triangle defined by the given points to POLYGONS."
+  (add-point polygons x0 y0 z0)
+  (add-point polygons x1 y1 z1)
+  (add-point polygons x2 y2 z2))
+
