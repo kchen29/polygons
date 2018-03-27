@@ -145,18 +145,23 @@
       ;;right
       (add-square r d b r y b r y z r d z))))
 
+(defmacro do-step-max ((var step max) &body body)
+  "Iterate for VAR STEP times from 0 to MAX."
+  (let ((temp (gensym)))
+    `(loop for ,temp below ,step
+           for ,var = (* ,max (/ ,temp ,step))
+           do ,@body)))
+
 (defun generate-sphere (step x y z r)
   "Generates a sphere with center (x y z), radius R, points drawn STEP times."
   (let (points)
-    (loop for long below step
-          for phi = (* 2 pi (/ long step))
-          do (loop for lat below step
-                   for theta = (* pi (/ lat step))
-                   do (push (list (+ x (* r (cos phi)))
-                                  (+ y (* r (sin phi) (cos theta)))
-                                  (+ z (* r (sin phi) (sin theta)))
-                                  1)
-                            points)))
+    (do-step-max (phi step (* 2 pi))
+      (do-step-max (theta step pi)
+        (push (list (+ x (* r (cos phi)))
+                    (+ y (* r (sin phi) (cos theta)))
+                    (+ z (* r (sin phi) (sin theta)))
+                    1)
+              points)))
     points))
              
 (defun add-sphere (edges step x y z r)
@@ -171,15 +176,13 @@
   "Generates a torus with center (x y z), cross-section circle radius R1,
    rotated around with radius R2. Points drawn STEP times."
   (let (points)
-    (loop for rot below step
-          for phi = (* 2 pi (/ rot step))
-          do (loop for circle below step
-                   for theta = (* 2 pi (/ circle step))
-                   do (push (list (+ x (* (cos phi) (+ r2 (* r1 (cos theta)))))
-                                  (- y (* r1 (sin theta)))
-                                  (- z (* (sin phi) (+ r2 (* r1 (cos theta)))))
-                                  1)
-                            points)))
+    (do-step-max (phi step (* 2 pi))
+      (do-step-max (theta step (* 2 pi))
+        (push (list (+ x (* (cos phi) (+ r2 (* r1 (cos theta)))))
+                    (- y (* r1 (sin theta)))
+                    (- z (* (sin phi) (+ r2 (* r1 (cos theta)))))
+                    1)
+              points)))
     points))
 
 (defun add-torus (edges step x y z r1 r2)
