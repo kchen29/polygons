@@ -123,66 +123,91 @@
                     (mref polygons 0 (+ 2 index))
                     (mref polygons 1 (+ 2 index))))))
 
+(defun add-quad (polygons x0 y0 z0 x1 y1 z1 x2 y2 z2 x3 y3 z3)
+  "Adds a quadrilateral to POLYGONS. Connects first three points
+   as a triangle, and first, third, and fourth points as a triangle."
+  (add-polygon polygons x0 y0 z0 x1 y1 z1 x2 y2 z2)
+  (add-polygon polygons x0 y0 z0 x2 y2 z2 x3 y3 z3))
+
+(defmacro add-quad-helper ()
+  "Helper macro for add-quad-index."
+  `(add-quad polygons
+             ,@(loop for x in '(l k j i)
+                     with forms = '()
+                     do (loop for y from 2 downto 0
+                              do (push `(mref points ,y ,x) forms))
+                     finally (return forms))))
+
+(defun add-quad-index (polygons points i j k l)
+  "Adds a quadrilateral to POLYGONS, with indices.
+   Indices into points."
+  (add-quad-helper))
+
 (defun add-box (polygons x y z width height depth)
-  "Adds a box to EDGES where the front left upper point is (x y z).
+  "Adds a box to POLYGONS where the front left upper point is (x y z).
    WIDTH is x, HEIGHT y, and DEPTH z."
   (let ((r (+ x width))
         (d (- y height))
         (b (- z depth)))
-    (flet ((add-square (x0 y0 z0 x1 y1 z1 x2 y2 z2 x3 y3 z3)
-             (add-polygon polygons x0 y0 z0 x1 y1 z1 x2 y2 z2)
-             (add-polygon polygons x0 y0 z0 x2 y2 z2 x3 y3 z3)))
-      ;;front
-      (add-square x y z x d z r d z r y z)
-      ;;top
-      (add-square x y z r y z r y b x y b)
-      ;;left
-      (add-square x y z x y b x d b x d z)
-      ;;back
-      (add-square r d b x d b x y b r y b)
-      ;;bottom
-      (add-square r d b r d z x d z x d b)
-      ;;right
-      (add-square r d b r y b r y z r d z))))
+    ;;front
+    (add-quad polygons x y z x d z r d z r y z)
+    ;;top
+    (add-quad polygons x y z r y z r y b x y b)
+    ;;left
+    (add-quad polygons x y z x y b x d b x d z)
+    ;;back
+    (add-quad polygons r d b x d b x y b r y b)
+    ;;bottom
+    (add-quad polygons r d b r d z x d z x d b)
+    ;;right
+    (add-quad polygons r d b r y b r y z r d z)))
 
 (defmacro do-step-max ((var step max) &body body)
-  "Iterate for VAR STEP times from 0 to MAX."
+  "Iterate for VAR STEP times from 0 to MAX, inclusive."
   (let ((temp (gensym)))
-    `(loop for ,temp below ,step
+    `(loop for ,temp upto ,step
            for ,var = (* ,max (/ ,temp ,step))
            do ,@body)))
 
 (defun generate-sphere (step x y z r)
   "Generates a sphere with center (x y z), radius R, points drawn STEP times."
-  (let (points)
+  (let ((points (make-matrix)))
     (do-step-max (phi step (* 2 pi))
       (do-step-max (theta step pi)
-        (push (list (+ x (* r (cos phi)))
-                    (+ y (* r (sin phi) (cos theta)))
-                    (+ z (* r (sin phi) (sin theta)))
-                    1)
-              points)))
+        (add-point points (+ x (* r (cos theta)))
+                   (+ y (* r (sin theta) (cos phi)))
+                   (+ z (* r (sin theta) (sin phi))))))
     points))
              
-(defun add-sphere (edges step x y z r)
-  "Adds a sphere to EDGES."
-  (loop for (p1 p2 p3) in (generate-sphere step x y z r)
-        do (add-edge edges p1 p2 p3 (+ 3 p1) (+ 3 p2) (+ 3 p3))))
+(defun add-sphere (polygons step x y z r)
+  "Adds a sphere to POLYGONS."
+  (let ((points (generate-sphere step x y z r)))
+    (flet ((get-index (rotation circle)
+             (+ circle (* rotation (1+ step)))))
+      (dotimes (rot step)
+        (dotimes (cir (1- step))
+          (add-quad-index polygons points
+                          (get-index rot (1+ cir))
+                          (get-index (1+ rot) (+ 2 cir))
+                          (get-index (1+ rot) (1+ cir))
+                          (get-index rot cir)))))))
 
 (defun generate-torus (step x y z r1 r2)
   "Generates a torus with center (x y z), cross-section circle radius R1,
    rotated around with radius R2. Points drawn STEP times."
-  (let (points)
+  (let ((points (make-matrix)))
     (do-step-max (phi step (* 2 pi))
       (do-step-max (theta step (* 2 pi))
-        (push (list (+ x (* (cos phi) (+ r2 (* r1 (cos theta)))))
-                    (- y (* r1 (sin theta)))
-                    (- z (* (sin phi) (+ r2 (* r1 (cos theta)))))
-                    1)
-              points)))
+        (add-point points (+ x (* (cos phi) (+ r2 (* r1 (cos theta)))))
+                   (- y (* r1 (sin theta)))
+                   (- z (* (sin phi) (+ r2 (* r1 (cos theta))))))))
     points))
 
-(defun add-torus (edges step x y z r1 r2)
-  "Adds a torus to EDGES."
-  (loop for (p1 p2 p3) in (generate-torus step x y z r1 r2)
-        do (add-edge edges p1 p2 p3 (+ 3 p1) (+ 3 p2) (+ 3 p3))))
+(defun add-torus (polygons step x y z r1 r2)
+  "Adds a torus to POLYGONS."
+  (let ((points (generate-torus step x y z r1 r2)))
+    (dotimes (index (m-last-col points))
+      (let ((p1 (mref points 0 index))
+            (p2 (mref points 1 index))
+            (p3 (mref points 2 index)))
+        (add-edge polygons p1 p2 p3 (+ 3 p1) (+ 3 p2) (+ 3 p3))))))
