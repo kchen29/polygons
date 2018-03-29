@@ -13,7 +13,7 @@
              else
                collect `((funcall ,test ,value ,test-value) ,@return-value))))
 
-(defun parse-file (filename edges transform dimensions screen)
+(defun parse-file (filename edges polygons transform dimensions screen)
   "Parses FILENAME. Uses EDGES and TRANSFORM matrices to store edges
    and the transform matrix. Commands write to SCREEN.
    The file follows the following format:
@@ -59,18 +59,21 @@
     (do ((line (next-line stream) (next-line stream)))
         ((string= line "quit"))
       (if (valid-command line)
-          (parse-line line stream edges transform dimensions screen)
+          (parse-line line stream edges polygons transform dimensions screen)
           (format t "Unknown command: ~a~%" line)))))
 
-(defun parse-line (line stream edges transform dimensions screen)
+(defun parse-line (line stream edges polygons transform dimensions screen)
   "Parses line according to parse-file."
   (switch line #'string=
     ("ident" (to-identity transform))
-    ("apply" (matrix-multiply transform edges))
-    ("display" (draw-polygons edges screen '(255 0 255))
+    ("apply" (matrix-multiply transform edges)
+             (matrix-multiply transform polygons))
+    ("display" (draw-polygons polygons screen '(255 0 255))
+               (draw-lines edges screen '(255 0 255))
                (display dimensions screen :wait t)
                (clear-screen screen))
-    ("clear" (clear-matrix edges))
+    ("clear" (clear-matrix edges)
+             (clear-matrix polygons))
     (otherwise
      (let ((args (parse-args (next-line stream))))
        (switch line #'string=
@@ -79,15 +82,16 @@
          ("hermite" (apply #'add-hermite edges .01 args))
          ("bezier" (apply #'add-bezier edges .01 args))
          
-         ("box" (apply #'add-box edges args))
-         ("sphere" (apply #'add-sphere edges 20 args))
-         ("torus" (apply #'add-torus edges 20 args))
+         ("box" (apply #'add-box polygons args))
+         ("sphere" (apply #'add-sphere polygons 20 args))
+         ("torus" (apply #'add-torus polygons 20 args))
          
          ("scale" (apply #'scale transform args))
          ("move" (apply #'translate transform args))
          ("rotate" (apply #'rotate transform args))
          
-         ("save" (draw-polygons edges screen '(255 0 255))
+         ("save" (draw-polygons polygons screen '(255 0 255))
+                 (draw-lines edges screen '(255 0 255))
                  (apply #'save (string-downcase (symbol-name (first args)))
                         (list dimensions screen))
                  (clear-screen screen)))))))
