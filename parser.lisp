@@ -58,7 +58,6 @@
   (with-open-file (stream filename)
     (do ((line (next-line stream) (next-line stream)))
         ((string= line "quit"))
-      (print-matrix transform)
       (if (valid-command line)
           (parse-line line stream edges transform dimensions screen)
           (format t "Unknown command: ~a~%" line)))))

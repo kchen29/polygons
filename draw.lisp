@@ -116,12 +116,29 @@
            (draw-line x1 y1 x2 y2 screen color)))
     (do ((index 0 (+ 3 index)))
         ((>= index (m-last-col polygons)))
-      (draw-polygon (mref polygons 0 index)
-                    (mref polygons 1 index)
-                    (mref polygons 0 (1+ index))
-                    (mref polygons 1 (1+ index))
-                    (mref polygons 0 (+ 2 index))
-                    (mref polygons 1 (+ 2 index))))))
+      (when (forward-facing polygons index)
+        (draw-polygon (mref polygons 0 index)
+                      (mref polygons 1 index)
+                      (mref polygons 0 (1+ index))
+                      (mref polygons 1 (1+ index))
+                      (mref polygons 0 (+ 2 index))
+                      (mref polygons 1 (+ 2 index)))))))
+
+;;closure
+(let ((temp1 (make-array 3))
+      (temp2 (make-array 3)))
+  (defun forward-facing (polygons index)
+    "Returns true if the surface in POLYGONS starting 
+     at INDEX is forward-facing."
+    (dotimes (x 3)
+      (setf (svref temp1 x) (- (mref polygons x index)
+                              (mref polygons x (1+ index)))
+            (svref temp2 x) (- (mref polygons x index)
+                              (mref polygons x (+ 2 index)))))
+    (plusp (- (* (svref temp1 0)
+                 (svref temp2 1))
+              (* (svref temp2 0)
+                 (svref temp1 1))))))
 
 (defun add-quad (polygons x0 y0 z0 x1 y1 z1 x2 y2 z2 x3 y3 z3)
   "Adds a quadrilateral to POLYGONS. Connects first three points
