@@ -148,12 +148,11 @@
 
 (defmacro add-quad-helper ()
   "Helper macro for add-quad-index."
-  `(add-quad polygons
-             ,@(loop for x in '(l k j i)
-                     with forms = '()
-                     do (loop for y from 2 downto 0
-                              do (push `(mref points ,y ,x) forms))
-                     finally (return forms))))
+  (let (forms)
+    (dolist (x '(l k j i))
+      (dotimes (y 3)
+        (push `(mref points ,y ,x) forms)))
+    `(add-quad polygons ,@(nreverse forms))))
 
 (defun add-quad-index (polygons points i j k l)
   "Adds a quadrilateral to POLYGONS, with indices.
