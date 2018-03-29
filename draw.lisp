@@ -124,7 +124,7 @@
                       (mref polygons 0 (+ 2 index))
                       (mref polygons 1 (+ 2 index)))))))
 
-;;closure
+;;closure, for efficiency
 (let ((temp1 (make-array 3))
       (temp2 (make-array 3)))
   (defun forward-facing (polygons index)
@@ -132,9 +132,9 @@
      at INDEX is forward-facing."
     (dotimes (x 3)
       (setf (svref temp1 x) (- (mref polygons x index)
-                              (mref polygons x (1+ index)))
+                               (mref polygons x (1+ index)))
             (svref temp2 x) (- (mref polygons x index)
-                              (mref polygons x (+ 2 index)))))
+                               (mref polygons x (+ 2 index)))))
     (plusp (- (* (svref temp1 0)
                  (svref temp2 1))
               (* (svref temp2 0)
@@ -149,7 +149,7 @@
 (defmacro add-quad-helper ()
   "Helper macro for add-quad-index."
   (let (forms)
-    (dolist (x '(l k j i))
+    (dolist (x '(i j k l))
       (dotimes (y 3)
         (push `(mref points ,y ,x) forms)))
     `(add-quad polygons ,@(nreverse forms))))
