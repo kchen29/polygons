@@ -81,8 +81,8 @@
          ("bezier" (apply #'add-bezier edges .01 args))
          
          ("box" (apply #'add-box edges args))
-         ("sphere" (apply #'add-sphere edges 50 args))
-         ("torus" (apply #'add-torus edges 50 args))
+         ("sphere" (apply #'add-sphere edges 20 args))
+         ("torus" (apply #'add-torus edges 20 args))
          
          ("scale" (apply #'scale transform args))
          ("move" (apply #'translate transform args))

@@ -178,19 +178,21 @@
                    (+ y (* r (sin theta) (cos phi)))
                    (+ z (* r (sin theta) (sin phi))))))
     points))
-             
+
+(defun get-index (step rotation circle)
+  "Give the index of the point given STEP, ROTATION, and CIRCLE."
+  (+ circle (* rotation (1+ step))))
+
 (defun add-sphere (polygons step x y z r)
   "Adds a sphere to POLYGONS."
   (let ((points (generate-sphere step x y z r)))
-    (flet ((get-index (rotation circle)
-             (+ circle (* rotation (1+ step)))))
-      (dotimes (rot step)
-        (dotimes (cir (1- step))
-          (add-quad-index polygons points
-                          (get-index rot (1+ cir))
-                          (get-index (1+ rot) (+ 2 cir))
-                          (get-index (1+ rot) (1+ cir))
-                          (get-index rot cir)))))))
+    (dotimes (rot step)
+      (dotimes (cir (1- step))
+        (add-quad-index polygons points
+                        (get-index step rot (1+ cir))
+                        (get-index step (1+ rot) (+ 2 cir))
+                        (get-index step (1+ rot) (1+ cir))
+                        (get-index step rot cir))))))
 
 (defun generate-torus (step x y z r1 r2)
   "Generates a torus with center (x y z), cross-section circle radius R1,
@@ -206,8 +208,10 @@
 (defun add-torus (polygons step x y z r1 r2)
   "Adds a torus to POLYGONS."
   (let ((points (generate-torus step x y z r1 r2)))
-    (dotimes (index (m-last-col points))
-      (let ((p1 (mref points 0 index))
-            (p2 (mref points 1 index))
-            (p3 (mref points 2 index)))
-        (add-edge polygons p1 p2 p3 (+ 3 p1) (+ 3 p2) (+ 3 p3))))))
+    (dotimes (rot step)
+      (dotimes (cir step)
+        (add-quad-index polygons points
+                        (get-index step rot cir)
+                        (get-index step (1+ rot) cir)
+                        (get-index step (1+ rot) (1+ cir))
+                        (get-index step rot (1+ cir)))))))
