@@ -1,9 +1,5 @@
 ;;;; Primitive functions for edges.
 
-(defun make-edges ()
-  "Makes edges."
-  (make-matrix))
-
 (defun add-edge (edges x0 y0 z0 x1 y1 z1)
   "Adds a line from point (x0 y0 z0) to (x1 y1 z1) to EDGES.
    Adjusts the array."
