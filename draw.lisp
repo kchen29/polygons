@@ -1,11 +1,11 @@
 ;;;; Draw to screen. Add things to edges.
 
-(defun plot (x y screen color)
-  "Plots (x, y) on the 2D array SCREEN with COLOR.
+(defun plot (x y color)
+  "Plots (x, y) on *SCREEN* with COLOR.
    Rounds x and y. Checks bounds. COLOR is not copied."
   (setf x (round x) y (round y))
-  (when (and (< -1 x (array-dimension screen 0)) (< -1 y (array-dimension screen 1)))
-    (setf (aref screen x y) color)))
+  (when (and (< -1 x *screen-side*) (< -1 y *screen-side*))
+    (setf (aref *screen* x y) color)))
 
 (defmacro draw-line-base (x0 y0 x1 y1 plot-1 plot-2)
   "Base code for octant 1. Other octants can be gotten from transformations."
@@ -17,13 +17,13 @@
          (2B (* 2 B))
          (d (+ 2A B) (+ d 2A)))
         ((> x ,x1))
-     (plot ,plot-1 ,plot-2 screen color)
+     (plot ,plot-1 ,plot-2 color)
      (when (> d 0)
        (incf y)
        (incf d 2B))))
 
-(defun draw-line (x0 y0 x1 y1 screen color)
-  "Draws a line from (x0, y0) to (x1, y1) on SCREEN using COLOR."
+(defun draw-line (x0 y0 x1 y1 color)
+  "Draws a line from (x0, y0) to (x1, y1) on *SCREEN* using COLOR."
   (when (minusp (- x1 x0))
     (rotatef x0 x1)
     (rotatef y0 y1))
@@ -37,15 +37,15 @@
             (draw-line-base y0 x0 (- y0 ydif) x1 y (- (* 2 y0) x))
             (draw-line-base x0 y0 x1 (- y0 ydif) x (- (* 2 y0) y))))))
 
-(defun draw-lines (edges screen color)
-  "Draws the lines from EDGES to SCREEN with COLOR."
+(defun draw-lines (edges color)
+  "Draws the lines from EDGES to *SCREEN* with COLOR."
   (do ((index 0 (+ 2 index)))
       ((>= index (m-last-col edges)))
     (draw-line (mref edges 0 index)
                (mref edges 1 index)
                (mref edges 0 (1+ index))
                (mref edges 1 (1+ index))
-               screen color)))
+               color)))
 
 ;;;curves
 (defun add-parametric (edges step x-function y-function &optional (z 0))
@@ -108,12 +108,12 @@
                                    (+ (* 3 (- x1 x2)) (- x3 x0)))))
 
 ;;;3d shapes
-(defun draw-polygons (polygons screen color)
-  "Draws the polygons from POLYGONS to SCREEN with COLOR."
+(defun draw-polygons (polygons color)
+  "Draws the polygons from POLYGONS to *SCREEN* with COLOR."
   (flet ((draw-polygon (x0 y0 x1 y1 x2 y2)
-           (draw-line x0 y0 x1 y1 screen color)
-           (draw-line x0 y0 x2 y2 screen color)
-           (draw-line x1 y1 x2 y2 screen color)))
+           (draw-line x0 y0 x1 y1 color)
+           (draw-line x0 y0 x2 y2 color)
+           (draw-line x1 y1 x2 y2 color)))
     (do ((index 0 (+ 3 index)))
         ((>= index (m-last-col polygons)))
       (when (forward-facing polygons index)

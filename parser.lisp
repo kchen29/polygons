@@ -13,9 +13,9 @@
              else
                collect `((funcall ,test ,value ,test-value) ,@return-value))))
 
-(defun parse-file (filename edges polygons transform dimensions screen)
+(defun parse-file (filename edges polygons transform)
   "Parses FILENAME. Uses EDGES and TRANSFORM matrices to store edges
-   and the transform matrix. Commands write to SCREEN.
+   and the transform matrix. Commands write to *SCREEN*.
    The file follows the following format:
      Every command is a single string that takes up a line
      Any command that requires arguments must have those arguments in the second line.
@@ -59,19 +59,19 @@
     (do ((line (next-line stream) (next-line stream)))
         ((string= line "quit"))
       (if (valid-command line)
-          (parse-line line stream edges polygons transform dimensions screen)
+          (parse-line line stream edges polygons transform)
           (format t "Unknown command: ~a~%" line)))))
 
-(defun parse-line (line stream edges polygons transform dimensions screen)
+(defun parse-line (line stream edges polygons transform)
   "Parses line according to parse-file."
   (switch line #'string=
     ("ident" (to-identity transform))
     ("apply" (matrix-multiply transform edges)
              (matrix-multiply transform polygons))
-    ("display" (draw-polygons polygons screen '(255 0 255))
-               (draw-lines edges screen '(255 0 255))
-               (display dimensions screen :wait t)
-               (clear-screen screen))
+    ("display" (draw-polygons polygons '(255 0 255))
+               (draw-lines edges '(255 0 255))
+               (display t)
+               (clear-screen))
     ("clear" (clear-matrix edges)
              (clear-matrix polygons))
     (otherwise
@@ -90,11 +90,10 @@
          ("move" (apply #'translate transform args))
          ("rotate" (apply #'rotate transform args))
          
-         ("save" (draw-polygons polygons screen '(255 0 255))
-                 (draw-lines edges screen '(255 0 255))
-                 (apply #'save (string-downcase (symbol-name (first args)))
-                        (list dimensions screen))
-                 (clear-screen screen)))))))
+         ("save" (draw-polygons polygons '(255 0 255))
+                 (draw-lines edges '(255 0 255))
+                 (save (string-downcase (symbol-name (first args))))
+                 (clear-screen)))))))
 
 (defun valid-command (line)
   "Returns t if line is a valid command. Nil otherwise."
