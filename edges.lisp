@@ -40,13 +40,6 @@
                   (lambda (s) (+ y (* radius (sin (* 2 pi s)))))
                   z))
 
-(defun evaluate-polynomial (x &rest coefficients)
-  "Evaluates a polynomial in X with COEFFICIENTS. Starts from the least power (x^0) and
-   increases with each coefficient."
-  (loop for coeff in coefficients
-        for product = 1 then (* x product)
-        sum (* coeff product)))
-
 (defun add-hermite (edges step x0 y0 x1 y1 dx0 dy0 dx1 dy1)
   "Add a hermite curve to EDGES with points (x0 y0) and (x1 y1) and the rates wrt. time of
    the corresponding coordinates (dx0 dy0) and (dx1 dy1), with STEP interval."
@@ -121,13 +114,6 @@
     (add-quad polygons r d b r d z x d z x d b)
     ;;right
     (add-quad polygons r d b r y b r y z r d z)))
-
-(defmacro do-step-max ((var step max) &body body)
-  "Iterate for VAR STEP times from 0 to MAX, inclusive."
-  (let ((temp (gensym)))
-    `(loop for ,temp upto ,step
-           for ,var = (* ,max (/ ,temp ,step))
-           do ,@body)))
 
 (defun generate-sphere (step x y z r)
   "Generates a sphere with center (x y z), radius R, points drawn STEP times."

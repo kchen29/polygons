@@ -1,18 +1,5 @@
 ;;;; Parse a script.
 
-(defmacro switch (value test &body cases)
-  "Macro for switch-case statements.
-   TESTs VALUE with the first element in each case of CASES.
-   If otherwise is the first element, then it acts as the default case."
-  `(cond
-     ,@(loop for case in cases
-             for test-value = (first case)
-             for return-value = (rest case)
-             if (eql 'otherwise test-value)
-               collect `(t ,@return-value)
-             else
-               collect `((funcall ,test ,value ,test-value) ,@return-value))))
-
 (defun parse-file (filename edges polygons transform)
   "Parses FILENAME. Uses EDGES and TRANSFORM matrices to store edges
    and the transform matrix. Commands write to *SCREEN*.
