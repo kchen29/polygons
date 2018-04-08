@@ -13,9 +13,9 @@
   "Accesses array of MATRIX at X and Y."
   `(aref (m-array ,matrix) ,x ,y))
 
-(defun make-matrix (&optional (rows 4) (cols 4))
-  "Makes a matrix with ROWS and COLS."
-  (m-matrix :rows rows :cols cols
+(defun make-matrix (&key (rows 4) (cols 4) (last-col 0))
+  "Makes a matrix."
+  (m-matrix :rows rows :cols cols :last-col last-col
             :array (make-array (list rows cols) :adjustable t)))
 
 ;;other matrix functions
@@ -43,12 +43,13 @@
 
 ;;identity, and multiply
 (defun to-identity (matrix)
-  "Turns MATRIX into an identity matrix."
+  "Turns MATRIX into an identity matrix. Returns the matrix"
   (dotimes (x (m-rows matrix))
     (dotimes (y (m-last-col matrix))
       (if (= x y)
           (setf (mref matrix x y) 1)
-          (setf (mref matrix x y) 0)))))
+          (setf (mref matrix x y) 0))))
+  matrix)
 
 (defun matrix-multiply (m1 m2)
   "A specific matrix multiplication routine. M1 is square.
@@ -69,9 +70,7 @@
 
 ;;;transformations
 (defun make-transform-matrix ()
-  (let ((transform (make-matrix)))
-    (setf (m-last-col transform) 4)
-    transform))
+  (to-identity (make-matrix :last-col 4)))
 
 (defmacro deftransform (transform-name args &body body)
   "Defuns make-transform given TRANSFORM-NAME, using args and the body.
@@ -87,7 +86,6 @@
        (defun ,make-symbol ,args
          ,make-doc
          (let ((transform (make-transform-matrix)))
-           (to-identity transform)
            ,@body
            transform))
        (defun ,transform-name ,(cons 'matrix args)
