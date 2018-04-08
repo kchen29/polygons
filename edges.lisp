@@ -7,11 +7,10 @@
   (add-point edges x1 y1 z1))
 
 (defun add-point (edges x y z)
-  "Adds a point (x y z) to EDGES at INDEX."
+  "Adds a point (x y z) to EDGES."
   (let ((index (m-last-col edges)))
     (when (= (m-last-col edges) (m-cols edges))
-      (adjust-matrix edges 4 (setf (m-cols edges)
-                                   (* 2 (m-cols edges)))))
+      (adjust-matrix edges 4 (* 2 (m-cols edges))))
     (incf (m-last-col edges))
     (setf (mref edges 0 index) x
           (mref edges 1 index) y

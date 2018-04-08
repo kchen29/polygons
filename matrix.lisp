@@ -1,5 +1,6 @@
-;;;; Matrices. Also includes transformations.
+;;;; Matrices and transformations.
 
+;;matrix struct definition
 (defstruct (matrix (:conc-name m-)
                    (:constructor m-matrix))
   rows
@@ -17,11 +18,7 @@
   (m-matrix :rows rows :cols cols
             :array (make-array (list rows cols) :adjustable t)))
 
-(defun clear-matrix (matrix)
-  "Clears MATRIX."
-  (adjust-matrix matrix 4 4)
-  (setf (m-last-col matrix) 0))
-
+;;other matrix functions
 (defun adjust-matrix (matrix rows cols)
   "Adjusts MATRIX to ROWS and COLS.
    Keeps last-col."
@@ -29,6 +26,10 @@
   (setf (m-rows matrix) rows)
   (setf (m-cols matrix) cols))
 
+(defun clear-matrix (matrix)
+  "Clears MATRIX."
+  (adjust-matrix matrix 4 4)
+  (setf (m-last-col matrix) 0))
 
 (defun print-matrix (matrix)
   "Prints out MATRIX to *standard-output*."
@@ -40,6 +41,7 @@
         collect (loop for y below (m-last-col matrix)
                       collect (mref matrix x y))))
 
+;;identity, and multiply
 (defun to-identity (matrix)
   "Turns MATRIX into an identity matrix."
   (dotimes (x (m-rows matrix))
